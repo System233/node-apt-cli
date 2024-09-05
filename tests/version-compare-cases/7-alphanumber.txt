@@ -1,0 +1,15 @@
+1.0a << 1.0b // true
+1.0a >> 1.0b // false
+1.0a <= 1.0b // true
+1.0a >= 1.0b // false
+1.0a = 1.0b // false
+1.0a1 << 1.0a2 // true
+1.0a1 >> 1.0a2 // false
+1.0a1 <= 1.0a2 // true
+1.0a1 >= 1.0a2 // false
+1.0a1 = 1.0a2 // false
+1.0a << 1.0.1 // true
+1.0a >> 1.0.1 // false
+1.0a <= 1.0.1 // true
+1.0a >= 1.0.1 // false
+1.0a = 1.0.1 // false

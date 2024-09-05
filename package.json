@@ -1,0 +1,36 @@
+{
+  "name": "apt-cli",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "APT CLI",
+  "main": "./dist/index.js",
+  "repository": "git+https://github.com/System233/node-apt-cli.git",
+  "author": "System233",
+  "license": "MIT",
+  "bin": "./dist/cli.js",
+  "devDependencies": {
+    "@types/cli-progress": "^3.11.6",
+    "@types/node": "^22.5.1",
+    "glob": "^11.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx tests/main.ts"
+  },
+  "dependencies": {
+    "cli-progress": "^3.12.0",
+    "commander": "^12.1.0"
+  },
+  "exports": {
+    "./*.js": "./dist/*.js"
+  },
+  "keywords": [
+    "apt",
+    "cli",
+    "apt-cli",
+    "debian",
+    "package"
+  ]
+}

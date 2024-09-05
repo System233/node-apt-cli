@@ -1,0 +1,14 @@
+cache
+.vscode
+node_modules
+lib
+tests
+.gitignore
+*.log
+tsconfig.json
+yarn.lock
+
+*.log
+*.tar
+*.gz
+*.zip

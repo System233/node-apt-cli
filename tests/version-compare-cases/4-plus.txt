@@ -1,0 +1,15 @@
+1.0+dfsg1 >> 1.0 // true
+1.0+dfsg1 << 1.0 // false
+1.0+dfsg1 >= 1.0 // true
+1.0+dfsg1 <= 1.0 // false
+1.0+dfsg1 = 1.0 // false
+1.0+dfsg1 << 1.0-1 // false
+1.0+dfsg1 >> 1.0-1 // true
+1.0+dfsg1 <= 1.0-1 // false
+1.0+dfsg1 >= 1.0-1 // true
+1.0+dfsg1 = 1.0-1 // false
+1.0+ds1 << 1.0+dfsg2 // false
+1.0+ds1 >> 1.0+dfsg2 // true
+1.0+ds1 <= 1.0+dfsg2 // false
+1.0+ds1 >= 1.0+dfsg2 // true
+1.0+ds1 = 1.0+dfsg2 // false

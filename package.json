@@ -3,7 +3,9 @@
   "type": "module",
   "version": "0.0.1",
   "description": "APT CLI",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "repository": "git+https://github.com/System233/node-apt-cli.git",
   "author": "System233",
   "license": "MIT",
@@ -16,15 +18,12 @@
     "typescript": "^5.5.4"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc&&esbuild \"lib/*.ts\" --outdir=dist --format=esm&&esbuild \"lib/*.ts\" --outdir=dist --format=cjs --out-extension:.js=.cjs",
     "test": "tsx tests/main.ts"
   },
   "dependencies": {
     "cli-progress": "^3.12.0",
     "commander": "^12.1.0"
-  },
-  "exports": {
-    "./*.js": "./dist/*.js"
   },
   "keywords": [
     "apt",

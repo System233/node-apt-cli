@@ -24,6 +24,7 @@ export interface CLIOption extends PackageManagerOption {
   noMissing: boolean;
   missing: boolean;
   unique: boolean;
+  cacheIndex: boolean;
 }
 const main = async (packages: string[], opt: CLIOption) => {
   opt.architecture = opt.arch;
@@ -65,6 +66,7 @@ program
   .option("--no-missing", "hidden missing dependencies.")
   .option("--no-unique", "no package scope duplicate dependency filtering.")
   .option("--newline <LF>", "format line break markers.")
+  .option("--cache-index", "cache package indexes.")
   .option(
     "--format <FORMAT>",
     "package print format.",

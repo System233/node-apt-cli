@@ -24,10 +24,12 @@ import { join } from "path";
 import { createHash } from "crypto";
 import { compareVersion } from "./version_compare.js";
 import { ReadableStream, WritableStream } from "node:stream/web";
+import { deserialize, serialize } from "v8";
 
 export interface FetchMetadataOption {
   gzip?: boolean;
   cacheDir?: string;
+  cacheIndex?: boolean;
   hash?: IHash[];
 }
 
@@ -173,6 +175,26 @@ export const fetchMetadata = async <K extends string>(
     data = await fetchBlob(url, Object.assign({}, option, { gzip: false }));
   }
   return parseMetadata<K>(data);
+};
+export const fetchAndCacheMetadata = async <K extends string>(
+  url: string,
+  option?: FetchMetadataOption
+) => {
+  if (option?.cacheDir && option.cacheIndex) {
+    const cache = url + ".index";
+    const buffer = await loadLocalCache(option.cacheDir, cache);
+    if (buffer) {
+      try {
+        return deserialize(buffer) as Record<K, string>[];
+      } catch (error) {
+        console.error("Error: BadIndexCache:%s", url);
+      }
+    }
+    const data = await fetchMetadata(url, option);
+    await saveLocalCache(option.cacheDir, cache, serialize(data));
+    return data;
+  }
+  return await fetchMetadata(url, option);
 };
 
 export const parseMetadata = <K extends string>(

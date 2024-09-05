@@ -13,7 +13,11 @@ import {
   PackageReleaseKey,
   ReleaseKey,
 } from "./interface.js";
-import { fetchMetadata, findItemHash, parsePackageHash } from "./utils.js";
+import {
+  fetchAndCacheMetadata,
+  findItemHash,
+  parsePackageHash,
+} from "./utils.js";
 
 export class Repository implements IRepository {
   type: "deb" | "deb-src";
@@ -51,9 +55,14 @@ export class Repository implements IRepository {
     );
     const downloadMetadata = <T extends string>(item: string) => {
       const { gzip, hash } = findItemHash(release.hash, item);
-      return fetchMetadata<T>(
+      return fetchAndCacheMetadata<T>(
         `${this.url}/dists/${this.distribution}/${item}`,
-        { gzip, hash, cacheDir: option?.cacheDir }
+        {
+          gzip,
+          hash,
+          cacheDir: option?.cacheDir,
+          cacheIndex: option?.cacheIndex,
+        }
       );
     };
     const data = await Promise.all(
@@ -98,9 +107,13 @@ export class Repository implements IRepository {
   }
   async loadMetadata(option?: LoadOption) {
     const release = (
-      await fetchMetadata<ReleaseKey>(
+      await fetchAndCacheMetadata<ReleaseKey>(
         `${this.url}/dists/${this.distribution}/Release`,
-        { gzip: true, cacheDir: option?.cacheDir }
+        {
+          gzip: true,
+          cacheDir: option?.cacheDir,
+          cacheIndex: option?.cacheIndex,
+        }
       )
     )[0];
     const hash = Object.entries({

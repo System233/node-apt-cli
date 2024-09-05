@@ -24,6 +24,7 @@ Options:
   --no-missing             hidden missing dependencies.
   --no-unique              no package scope duplicate dependency filtering.
   --newline <LF>           format line break markers.
+  --cache-index            cache package indexes.
   --format <FORMAT>        package print format. (default: "{package}:{architecture} ({selector})")
   --indent <INT>           tree indent width. (default: 2)
   -e, --entry <ENTRY>      APT source entry. (default: [])

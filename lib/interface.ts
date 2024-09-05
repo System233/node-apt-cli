@@ -1,5 +1,5 @@
 // Copyright (c) 2024 System233
-// 
+//
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
@@ -123,9 +123,11 @@ export interface IPackageRelease {
 export interface PackageManagerOption {
   architecture?: string;
   cacheDir?: string;
+  cacheIndex?: boolean;
 }
 export interface LoadOption {
   cacheDir?: string;
+  cacheIndex?:boolean
 }
 export interface IPackageManager {}
 export interface ResolveOption {

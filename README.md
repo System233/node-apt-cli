@@ -19,9 +19,10 @@ Arguments:
 
 Options:
   -r, --recursive          recursive package search.
-  -c, --cache-dir <DIR>    metadata cache directory.
-  -a, --arch <ARCH>        default architecture. (default: "amd64")
+  -c, --cache-dir <DIR>    metadata cache path.
+  -a, --arch <ARCH>        default architecture. (default: "any")
   --no-missing             hidden missing dependencies.
+  --no-unique              no package scope duplicate dependency filtering.
   --newline <LF>           format line break markers.
   --format <FORMAT>        package print format. (default: "{package}:{architecture} ({selector})")
   --indent <INT>           tree indent width. (default: 2)

@@ -110,6 +110,7 @@ export interface IPackage {
   description: string;
   dependencies?: IPackage[];
   metadata: IPackageRelease;
+  parsedProvides?: PackageSelector[] | null;
   parsedVersion?: IPackageVersion | null;
 }
 export interface IPackageRelease {
@@ -127,7 +128,7 @@ export interface PackageManagerOption {
 }
 export interface LoadOption {
   cacheDir?: string;
-  cacheIndex?:boolean
+  cacheIndex?: boolean;
 }
 export interface IPackageManager {}
 export interface ResolveOption {

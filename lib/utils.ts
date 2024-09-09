@@ -306,6 +306,14 @@ export const parsePackageVersion = (pkg: IVersion | null) => {
   pkg.parsedVersion = version;
   return pkg.parsedVersion;
 };
+
+export const getPackageProvides = (pkg: IPackage) => {
+  if (!pkg.parsedProvides) {
+    pkg.parsedProvides =
+      pkg.provides?.flatMap((item) => parsePackageSelect(item)) ?? [];
+  }
+  return pkg.parsedProvides;
+};
 export const parsePackageHash = (
   pkg: Record<PackageKey, string>
 ): Record<HashType, string> => {

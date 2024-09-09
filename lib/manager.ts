@@ -14,7 +14,11 @@ import {
   ResolveOption,
 } from "./interface.js";
 import { Repository } from "./repository.js";
-import { parsePackageSelect, testVersion } from "./utils.js";
+import {
+  getPackageProvides,
+  parsePackageSelect,
+  testVersion,
+} from "./utils.js";
 
 export class PackageManager implements IPackageManager {
   readonly repository: RepositoryManager;
@@ -52,7 +56,9 @@ export class PackageManager implements IPackageManager {
     let allpkg = this.indexes.filter(
       (x) =>
         (x.package == selector.package ||
-          x.provides?.includes(selector.package)) &&
+          !!getPackageProvides(x).find(
+            (item) => item.package == selector.package
+          )) &&
         (currentSelectedArch === "any" ||
           x.architecture == perferencedPackageArch)
     );
@@ -72,7 +78,15 @@ export class PackageManager implements IPackageManager {
       // ];
     }
     const pkg =
-      allpkg.find((item) => testVersion(item, selector.op, selector)) ?? null;
+      allpkg.find(
+        (item) =>
+          testVersion(item, selector.op, selector) ||
+          getPackageProvides(item).find(
+            (item) =>
+              item.package == selector.package &&
+              testVersion(item, selector.op, selector)
+          )
+      ) ?? null;
     if (
       pkg != null &&
       option?.recursive &&

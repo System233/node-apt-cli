@@ -1,10 +1,9 @@
 {
   "name": "apt-cli",
   "type": "module",
-  "version": "0.0.2",
-  "description": "APT CLI",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "version": "0.0.3",
+  "description": "APT CLI - Used to parse the DEB package dependency tree.",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "repository": "git+https://github.com/System233/node-apt-cli.git",
   "author": "System233",
@@ -18,7 +17,7 @@
     "typescript": "^5.5.4"
   },
   "scripts": {
-    "build": "tsc&&esbuild \"lib/*.ts\" --outdir=dist --format=esm&&esbuild \"lib/*.ts\" --outdir=dist --format=cjs --out-extension:.js=.cjs",
+    "build": "tsc&&esbuild \"lib/*.ts\" --outdir=dist --format=esm",
     "test": "tsx tests/main.ts"
   },
   "dependencies": {

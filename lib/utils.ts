@@ -6,6 +6,7 @@
 import { promisify } from "util";
 import { unzip } from "zlib";
 import {
+  APTAuthConf,
   HashType,
   IHash,
   IPackage,
@@ -31,7 +32,23 @@ export interface FetchMetadataOption {
   cacheDir?: string;
   cacheIndex?: boolean;
   hash?: IHash[];
+  auth?: (url: string) => { username: string; password: string } | null;
 }
+export const basicAuthorization = (username: string, password: string) =>
+  [
+    "Authorization",
+    "Basic " + Buffer.from(username + ":" + password).toString("base64"),
+  ] as [string, string];
+
+export const buildBasicAuthorizationFromURL = (url: URL) => {
+  if (url.password || url.username) {
+    const { username, password } = url;
+    url.username = "";
+    url.password = "";
+    return [basicAuthorization(username, password)];
+  }
+  return null;
+};
 
 const inflateAsync = promisify(unzip);
 const bars = new MultiBar({
@@ -101,11 +118,21 @@ const saveLocalCache = async (
   await mkdir(cacheDir, { recursive: true });
   await writeFile(file, buffer);
 };
+const getAuthHeaders = (url: string, option?: FetchMetadataOption) => {
+  const auth = option?.auth?.(url);
+  if (auth) {
+    return [basicAuthorization(auth.username, auth.password)];
+  }
+  return undefined;
+};
 const fetchBlobNetwork = async (
   url: string,
   option?: FetchMetadataOption
 ): Promise<Buffer | null> => {
-  const resp = await fetch(url);
+  const parsedURL = new URL(url);
+  const headers =
+    buildBasicAuthorizationFromURL(parsedURL) || getAuthHeaders(url, option);
+  const resp = await fetch(parsedURL, { headers });
   if (resp.status >= 400) {
     throw new Error(`fetch ${url}: ${resp.status} ${resp.statusText}`);
   }
@@ -464,4 +491,28 @@ export const findItemHash = (hash: IHash[], item: string) => {
     return hash.path == item || isGzip;
   });
   return { gzip, hash: filtered };
+};
+
+export const loadAPTAuthConf = async (file: string, noWarn: boolean = true) => {
+  const data = await readFile(file, "utf8");
+  return data
+    .split("\n")
+    .map((x) => x.trim())
+    .filter((x) => !x.startsWith("#"))
+    .map((line) => {
+      const match =
+        /^\s*machine\s+(?:(\S+):\/\/)?(\S+)\s+login\s+(\S+)\s+password\s+(\S+)$/.exec(
+          line
+        );
+      if (!match) {
+        if (!noWarn) {
+          console.warn("无效APT授权配置:", line);
+        }
+        return null;
+      }
+      const [, protocol, location, username, password] = match;
+      const url = `${protocol ?? "https"}://${location}`;
+      return { url, username, password } as APTAuthConf;
+    })
+    .filter((x) => x != null);
 };

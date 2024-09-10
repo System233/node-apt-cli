@@ -3,6 +3,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
+import { AuthManager } from "./auth.js";
 import {
   IPackage,
   IPackageManager,
@@ -22,9 +23,11 @@ import {
 
 export class PackageManager implements IPackageManager {
   readonly repository: RepositoryManager;
+  readonly auth: AuthManager;
   indexes: IPackage[];
   constructor(readonly option: PackageManagerOption) {
-    this.repository = new RepositoryManager();
+    this.auth = new AuthManager();
+    this.repository = new RepositoryManager(this.auth);
   }
   private _resolve(
     selector: string | PackageSelector,
@@ -136,9 +139,9 @@ export class PackageManager implements IPackageManager {
 
 export class RepositoryManager {
   readonly data: Repository[] = [];
-  constructor() {}
+  constructor(readonly auth: AuthManager) {}
   create(option: IRepository) {
-    const repo = new Repository(option);
+    const repo = new Repository(option, this.auth);
     this.add(repo);
     return repo;
   }

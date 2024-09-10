@@ -3,6 +3,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
+import { AuthManager } from "./auth.js";
 import {
   IPackage,
   IPackageRelease,
@@ -27,7 +28,7 @@ export class Repository implements IRepository {
   architectures?: string[] | undefined;
   metadata: IRelease;
   indexes: IPackage[] = [];
-  constructor(option: IRepository) {
+  constructor(option: IRepository, readonly auth?: AuthManager) {
     this.type = option.type;
     this.url = option.url;
     this.distribution = option.distribution;
@@ -62,6 +63,7 @@ export class Repository implements IRepository {
           hash,
           cacheDir: option?.cacheDir,
           cacheIndex: option?.cacheIndex,
+          auth: (url) => this.auth?.find(url) ?? null,
         }
       );
     };
@@ -113,6 +115,7 @@ export class Repository implements IRepository {
           gzip: true,
           cacheDir: option?.cacheDir,
           cacheIndex: option?.cacheIndex,
+          auth: (url) => this.auth?.find(url) ?? null,
         }
       )
     )[0];

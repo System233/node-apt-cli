@@ -6,6 +6,7 @@
 
 import { program } from "commander";
 import {
+  loadAPTAuthConf,
   PackageManager,
   PackageManagerOption,
   parseSourceEnrty,
@@ -25,6 +26,7 @@ export interface CLIOption extends PackageManagerOption {
   missing: boolean;
   unique: boolean;
   cacheIndex: boolean;
+  authConf?: string;
 }
 const main = async (packages: string[], opt: CLIOption) => {
   opt.architecture = opt.arch;
@@ -48,6 +50,10 @@ const main = async (packages: string[], opt: CLIOption) => {
     );
     process.exit(1);
   }
+  if (opt.authConf) {
+    const data = await loadAPTAuthConf(opt.authConf);
+    data.forEach((item) => manager.auth.conf.push(item));
+  }
   await manager.load();
   packages.forEach((selector) => {
     const pkg = manager.resolve(selector, opt);
@@ -64,6 +70,7 @@ program
   .option("-c, --cache-dir <DIR>", "metadata cache path.")
   .option("-a, --arch <ARCH>", "default architecture.", "any")
   .option("--no-missing", "hidden missing dependencies.")
+  .option("--auth-conf <auth.conf>", "apt auth.conf configuration.")
   .option("--no-unique", "no package scope duplicate dependency filtering.")
   .option("--newline <LF>", "format line break markers.")
   .option("--cache-index", "cache package indexes.")

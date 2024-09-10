@@ -140,3 +140,9 @@ export interface PrintOption {
   indent: number;
   unique?: boolean;
 }
+
+export interface APTAuthConf {
+  url: string;
+  username: string;
+  password: string;
+}

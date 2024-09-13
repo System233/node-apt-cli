@@ -7,13 +7,16 @@ import { createUnzip } from "zlib";
 import bz2 from "unbzip2-stream";
 import xz from "lzma-native";
 import { createHash } from "crypto";
-import { PassThrough, Stream } from "stream";
+import { Duplex, PassThrough, pipeline, Readable, Stream } from "stream";
 import assert from "assert";
 import { createWriteStream } from "fs";
 import { ReadableStream } from "stream/web";
-import { WritableStream } from "node:stream/web";
 import { formatUnit, multiBar, truncateFilename } from "./progress.js";
 
+export const pipelineDuplex = <T extends Duplex>(stream: Readable, dest: T) => {
+  pipeline(stream, dest);
+  return dest;
+};
 export const createGzipStream = () => {
   return createUnzip();
 };
@@ -75,28 +78,14 @@ export const streamToBuffer = (stream: Stream) => {
 export const createCacheStream = (to: string) => {
   const stream = createWriteStream(to, { encoding: "binary" });
   const passThrough = new PassThrough();
-  passThrough.on("data", (chunk: Buffer) => stream.write(chunk));
-  passThrough.on("end", () => stream.end());
-  stream.on("error", (error) => passThrough.destroy(error));
+  //   passThrough.on("data", (chunk: Buffer) => stream.write(chunk));
+  //   passThrough.on("end", () => stream.end());
+  //   stream.on("error", (error) => passThrough.destroy(error));
+  //   passThrough.pipe(stream);
+  pipeline(passThrough, stream);
   return passThrough;
 };
 
-export const toWriteStream = (rs: ReadableStream, total: number) => {
-  const passThrough = new PassThrough();
-  let current = 0;
-  rs.pipeTo(
-    new WritableStream({
-      write(chunk: ArrayBuffer) {
-        passThrough.write(chunk);
-        current += chunk.byteLength;
-      },
-      close() {
-        passThrough.end();
-      },
-      abort(reason) {
-        passThrough.destroy(reason);
-      },
-    })
-  );
-  return passThrough;
+export const toReadableStream = (rs: ReadableStream) => {
+  return Readable.fromWeb(rs);
 };

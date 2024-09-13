@@ -6,7 +6,7 @@
 import { IHash } from "./interface.js";
 import { access, mkdir } from "fs/promises";
 import { extname, join } from "path";
-import { Stream } from "stream";
+import { pipeline, Readable } from "stream";
 import { createReadStream } from "fs";
 import {
   createBzip2Stream,
@@ -15,8 +15,9 @@ import {
   createHashStream,
   createProgressStream,
   createXZStream,
+  pipelineDuplex,
   streamToBuffer,
-  toWriteStream as toReadStream,
+  toReadableStream,
 } from "./streams.js";
 import { parseMetadata } from "./parsers.js";
 
@@ -65,7 +66,7 @@ const getAuthHeaders = (url: string, option?: FetchMetadataOption) => {
 const fetchBlobNetwork = async (
   url: string,
   option?: FetchMetadataOption
-): Promise<Stream> => {
+): Promise<Readable> => {
   const parsedURL = new URL(url);
   const headers =
     buildBasicAuthorizationFromURL(parsedURL) || getAuthHeaders(url, option);
@@ -77,19 +78,21 @@ const fetchBlobNetwork = async (
     ? await getLocalCache(option.cacheDir, url)
     : null;
   const total = +(resp.headers.get("content-length") ?? 0);
-  let stream = toReadStream(resp.body, total);
+  let stream = toReadableStream(resp.body);
   if (cache) {
-    stream = stream.pipe(createCacheStream(cache));
+    pipeline(stream, createCacheStream(cache));
+    // stream = stream.pipe(createCacheStream(cache));
   }
   if (!option?.quiet) {
-    stream = stream.pipe(createProgressStream(url, total));
+    pipeline(stream, createProgressStream(url, total));
+    // stream = stream.pipe(createProgressStream(url, total));
   }
   return stream;
 };
 const fetchBlobLocal = async (
   url: string,
   option?: FetchMetadataOption
-): Promise<Stream | null> => {
+): Promise<Readable | null> => {
   if (!option?.cacheDir) {
     return null;
   }
@@ -105,20 +108,24 @@ export const fetchBlob = async (
   url: string,
   hash?: IHash | null,
   option?: FetchMetadataOption
-): Promise<Stream> => {
+): Promise<Readable> => {
   let stream =
     (await fetchBlobLocal(url, option)) ??
     (await fetchBlobNetwork(url, option));
   if (hash) {
-    stream = stream.pipe(createHashStream(hash.path, hash.type, hash.hash));
+    stream = pipelineDuplex(
+      stream,
+      createHashStream(hash.path, hash.type, hash.hash)
+    );
+    // stream = stream.pipe(createHashStream(hash.path, hash.type, hash.hash));
   }
   const ext = extname(url).toLowerCase();
   if (ext == ".bz2") {
-    stream = stream.pipe(createBzip2Stream());
+    stream = pipelineDuplex(stream, createBzip2Stream());
   } else if (ext == ".gz" || ext == ".gzip") {
-    stream = stream.pipe(createGzipStream());
+    stream = pipelineDuplex(stream, createGzipStream());
   } else if (ext == ".xz") {
-    stream = stream.pipe(createXZStream());
+    stream = pipelineDuplex(stream, createXZStream());
   }
   return stream;
 };

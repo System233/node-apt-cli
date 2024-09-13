@@ -80,10 +80,10 @@ const fetchBlobNetwork = async (
     : null;
   const total = +(resp.headers.get("content-length") ?? 0);
   let stream = toReadableStream(resp.body);
-  // if (cache) {
-  //   stream = pipelineDuplex(stream, createCacheStream(cache));
-  //   // stream = stream.pipe(createCacheStream(cache));
-  // }
+  if (cache) {
+    stream = pipelineDuplex(stream, createCacheStream(cache));
+    // stream = stream.pipe(createCacheStream(cache));
+  }
   if (!option?.quiet) {
     stream = pipelineDuplex(stream, createProgressStream(url, total));
     // stream = stream.pipe(createProgressStream(url, total));

@@ -14,7 +14,7 @@ import { ReadableStream } from "stream/web";
 import { formatUnit, multiBar, truncateFilename } from "./progress.js";
 
 export const pipelineDuplex = <T extends Duplex>(stream: Readable, dest: T) => {
-  pipeline(stream, dest);
+  pipeline(stream, dest, () => {});
   return dest;
 };
 export const createGzipStream = () => {
@@ -82,7 +82,7 @@ export const createCacheStream = (to: string) => {
   //   passThrough.on("end", () => stream.end());
   //   stream.on("error", (error) => passThrough.destroy(error));
   //   passThrough.pipe(stream);
-  pipeline(passThrough, stream);
+  pipeline(passThrough, stream, () => {});
   return passThrough;
 };
 

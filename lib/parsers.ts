@@ -22,7 +22,7 @@ import {
 import { compareVersion } from "./version_compare.js";
 import { formatMessage } from "./utils.js";
 
-export const serachContents = (index: IContentIndex, text: string) => {
+export const serachContents = async (index: IContentIndex, text: string) => {
   let matchBegin = ".*";
   let matchEnd = ".*";
 
@@ -35,21 +35,31 @@ export const serachContents = (index: IContentIndex, text: string) => {
     matchBegin = "";
   }
   const regex = new RegExp(
-    `^(${matchBegin}(?:${text})${matchEnd})\\t\\s*(.+)\\s*$`,
-    "mg"
+    `^(${matchBegin}(?:${text})${matchEnd})\\t\\s*(.+)\\s*$`
   );
-  return Array.from(index.contents.matchAll(regex)).flatMap((match) => {
-    const [, path, target] = match;
-    return target.split(",").map((target) => {
-      const [type, pkg] = target.split("/", 2);
-      return {
-        index,
-        type,
-        package: pkg,
-        path,
-      } as IContentItem;
-    });
-  });
+  const contents = await index.contents();
+  if (!contents) {
+    return [];
+  }
+  const result: IContentItem[] = [];
+  for await (const line of contents) {
+    const match = regex.exec(line);
+    if (match) {
+      const [, path, target] = match;
+      result.push(
+        ...target.split(",").map((target) => {
+          const [type, pkg] = target.split("/", 2);
+          return {
+            index,
+            type,
+            package: pkg,
+            path,
+          } as IContentItem;
+        })
+      );
+    }
+  }
+  return result;
 };
 export const parseMetadata = <K extends string>(
   text: string

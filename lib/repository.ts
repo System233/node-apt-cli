@@ -16,7 +16,7 @@ import {
   ReleaseKey,
 } from "./interface.js";
 import { findItemHash, parsePackageHash } from "./parsers.js";
-import { fetchAndCacheMetadata, fetchContents } from "./utils.js";
+import { fetchMetadata, fetchContents } from "./utils.js";
 
 export class Repository implements IRepository {
   type: "deb" | "deb-src";
@@ -67,13 +67,13 @@ export class Repository implements IRepository {
           const name = `${component}/Contents-${architecture}`;
           const hash = findItemHash(release.hash, name);
           const base = `${this.url}/dists/${this.distribution}`;
-
-          const contents = await fetchContents(base, name, hash, {
-            cacheDir: option?.cacheDir,
-            cacheIndex: option?.cacheIndex,
-            quiet: option?.quiet,
-            auth: (url) => this.auth?.find(url) ?? null,
-          });
+          const contents = () =>
+            fetchContents(base, name, hash, {
+              cacheDir: option?.cacheDir,
+              cacheIndex: option?.cacheIndex,
+              quiet: option?.quiet,
+              auth: (url) => this.auth?.find(url) ?? null,
+            });
           return {
             repository: this,
             name,
@@ -101,7 +101,7 @@ export class Repository implements IRepository {
     const downloadMetadata = <T extends string>(item: string) => {
       const hash = findItemHash(release.hash, item);
       const base = `${this.url}/dists/${this.distribution}`;
-      return fetchAndCacheMetadata<T>(base, item, hash, {
+      return fetchMetadata<T>(base, item, hash, {
         cacheDir: option?.cacheDir,
         cacheIndex: option?.cacheIndex,
         quiet: option?.quiet,
@@ -151,7 +151,7 @@ export class Repository implements IRepository {
   async loadMetadata(option?: LoadOption) {
     const base = `${this.url}/dists/${this.distribution}`;
     const release = (
-      await fetchAndCacheMetadata<ReleaseKey>(base, `Release`, null, {
+      await fetchMetadata<ReleaseKey>(base, `Release`, null, {
         cacheDir: option?.cacheDir,
         cacheIndex: option?.cacheIndex,
         auth: (url) => this.auth?.find(url) ?? null,

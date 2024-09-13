@@ -131,17 +131,20 @@ export class PackageManager implements IPackageManager {
   ): IPackage | null {
     return this._resolve(selector, new Set(), undefined, option);
   }
-  find(regex: string, architecture?: string | string[]) {
+  async find(regex: string, architecture?: string | string[]) {
     if (architecture && !Array.isArray(architecture)) {
       architecture = [architecture];
     }
-    return this.repository.data.flatMap((item) =>
-      item.contents
-        .filter(
-          (cont) => !architecture || architecture.includes(cont.architecture)
-        )
-        .flatMap((item) => serachContents(item, regex))
+    const result = await Promise.all(
+      this.repository.data.flatMap((item) =>
+        item.contents
+          .filter(
+            (cont) => !architecture || architecture.includes(cont.architecture)
+          )
+          .map((item) => serachContents(item, regex))
+      )
     );
+    return result.flat();
   }
   async loadContents(option?: LoadOption) {
     await this.repository.loadContentsAll(option ?? this.option);

@@ -3,6 +3,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
+import { Interface } from "readline";
+
 export interface IPackageHash {
   type: string;
   hash: string;
@@ -159,7 +161,7 @@ export interface IContentItem {
 
 export interface IContentIndex {
   name: string;
-  contents: string;
+  contents: () => Promise<Interface | null>;
   component: string;
   architecture: string;
   repository: IRepository;

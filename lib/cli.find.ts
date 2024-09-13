@@ -28,10 +28,12 @@ export const find = async (regex: string[], opt: CLIFindOption) => {
   const manager = await createPackageManager(opt);
   await manager.loadMetadata(opt);
   await manager.loadContents(opt);
-  regex.forEach((item) => {
-    const result = manager.find(item);
-    result.forEach((item) => console.log(formatMessage(item, opt.format)));
-  });
+  await Promise.all(
+    regex.map(async (item) => {
+      const result = await manager.find(item);
+      result.forEach((item) => console.log(formatMessage(item, opt.format)));
+    })
+  );
 };
 export const findCommand = new Command("find")
   .description("Find package name by file name like apt-file")

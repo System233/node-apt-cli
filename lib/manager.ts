@@ -131,9 +131,11 @@ export class PackageManager implements IPackageManager {
   ): IPackage | null {
     return this._resolve(selector, new Set(), undefined, option);
   }
-  find(regex: string) {
+  find(regex: string, architecture?: string) {
     return this.repository.data.flatMap((item) =>
-      item.contents.map((item) => serachContents(item, regex))
+      item.contents
+        .filter((cont) => !architecture || cont.architecture == architecture)
+        .flatMap((item) => serachContents(item, regex))
     );
   }
   async loadContents(option?: LoadOption) {

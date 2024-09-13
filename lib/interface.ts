@@ -132,6 +132,7 @@ export interface LoadOption {
   cacheIndex?: boolean;
   quiet?: boolean;
 }
+
 export interface IPackageManager {}
 export interface ResolveOption {
   recursive?: boolean;

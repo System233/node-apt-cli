@@ -30,9 +30,7 @@ export const find = async (regex: string[], opt: CLIFindOption) => {
   await manager.loadContents(opt);
   regex.forEach((item) => {
     const result = manager.find(item);
-    result.forEach((items) =>
-      items.forEach((item) => console.log(formatMessage(item, opt.format)))
-    );
+    result.forEach((item) => console.log(formatMessage(item, opt.format)));
   });
 };
 export const findCommand = new Command("find")

@@ -7,8 +7,8 @@ import { deepStrictEqual } from "node:assert";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, it } from "node:test";
-import { parsePackageVersionString } from "../lib/utils.js";
 import { IPackageVersion } from "../lib/interface.js";
+import { parsePackageVersionString } from "../lib/parsers.js";
 
 interface Group {
   file: string;

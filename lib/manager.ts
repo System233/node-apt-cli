@@ -14,17 +14,18 @@ import {
   PackageSelector,
   ResolveOption,
 } from "./interface.js";
-import { Repository } from "./repository.js";
 import {
-  getPackageProvides,
   parsePackageSelect,
+  getPackageProvides,
   testVersion,
-} from "./utils.js";
+  serachContents,
+} from "./parsers.js";
+import { Repository } from "./repository.js";
 
 export class PackageManager implements IPackageManager {
   readonly repository: RepositoryManager;
   readonly auth: AuthManager;
-  indexes: IPackage[];
+  indexes: IPackage[] = [];
   constructor(readonly option: PackageManagerOption) {
     this.auth = new AuthManager();
     this.repository = new RepositoryManager(this.auth);
@@ -130,10 +131,25 @@ export class PackageManager implements IPackageManager {
   ): IPackage | null {
     return this._resolve(selector, new Set(), undefined, option);
   }
-  async load() {
-    await this.repository.loadMetadataAll(this.option);
-    await this.repository.loadIndexesAll(this.option);
+  find(regex: string) {
+    return this.repository.data.flatMap((item) =>
+      item.contents.map((item) => serachContents(item, regex))
+    );
+  }
+  async loadContents(option?: LoadOption) {
+    await this.repository.loadContentsAll(option ?? this.option);
+  }
+  async loadMetadata(option?: LoadOption) {
+    await this.repository.loadMetadataAll(option ?? this.option);
+  }
+  async loadIndexes(option?: LoadOption) {
+    await this.repository.loadIndexesAll(option ?? this.option);
     this.indexes = this.repository.data.flatMap((item) => item.indexes);
+  }
+  async load(option?: LoadOption) {
+    const opt = Object.assign({}, this.option, option);
+    await this.loadMetadata(opt);
+    await this.loadIndexes(opt);
   }
 }
 
@@ -166,10 +182,16 @@ export class RepositoryManager {
   async loadIndexes(repo: Repository, option?: LoadOption) {
     return await repo.loadIndexes(option);
   }
+  async loadContents(repo: Repository, option?: LoadOption) {
+    return await repo.loadContents(option);
+  }
   async loadMetadataAll(option?: LoadOption) {
     await Promise.all(this.data.map((item) => this.loadMetadata(item, option)));
   }
   async loadIndexesAll(option?: LoadOption) {
     await Promise.all(this.data.map((item) => this.loadIndexes(item, option)));
+  }
+  async loadContentsAll(option?: LoadOption) {
+    await Promise.all(this.data.map((item) => this.loadContents(item, option)));
   }
 }

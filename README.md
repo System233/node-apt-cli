@@ -1,41 +1,48 @@
 <!--
  Copyright (c) 2024 System233
- 
+
  This software is released under the MIT License.
  https://opensource.org/licenses/MIT
 -->
 
-# APT-CLI 
+# APT-CLI
+
 Used to parse the DEB package dependency tree.
 
+## Features
+
+- Specify package repository
+- Print dependency tree
+- Search for package name by file name [v0.1.0]
+
 ## Usage
+
 ```sh
 $ npx apt-cli -h # or yarn apt-cli -h
 
 Usage: apt-cli [options] <package...>
 
-Arguments:
-  package                  list of packages to be parsed.
-
 Options:
-  -r, --recursive          recursive package search.
-  -c, --cache-dir <DIR>    metadata cache path.
-  -a, --arch <ARCH>        default architecture. (default: "any")
-  --no-missing             hidden missing dependencies.
-  --no-unique              no package scope duplicate dependency filtering.
-  --newline <LF>           format line break markers.
-  --cache-index            cache package indexes.
-  --format <FORMAT>        package print format. (default: "{package}:{architecture} ({selector})")
-  --indent <INT>           tree indent width. (default: 2)
-  -e, --entry <ENTRY>      APT source entry. (default: [])
-  -f, --entry-file <FILE>  APT sources.list file. (default: [])
-  -h, --help               display help for command
+  -c, --cache-dir <DIR>           metadata cache path.
+  -a, --arch <ARCH>               default architecture. (default: "any")
+  --auth-conf <auth.conf>         apt auth.conf configuration.
+  --newline <LF>                  format line break markers.
+  --cache-index                   cache package indexes.
+  --quiet                         no progress bar.
+  -e, --entry <ENTRY>             APT source entry. (default: [])
+  -f, --entry-file <FILE>         APT sources.list file. (default: [])
+  -h, --help                      display help for command
+
+Commands:
+  resolve [options] <package...>  Search packages via package selector
+  find [options] <regex...>       Find package name by file name like apt-file
+  help [command]                  display help for command
 ```
 
 ## Example
 
 ```sh
-$ yarn apt-cli -r -e "deb https://community-packages.deepin.com/deepin/beige beige main" -c cache -a amd64 apt
+$ yarn apt-cli -r -e "deb https://community-packages.deepin.com/deepin/beige beige main" -c cache -a amd64 resolve apt
  ████████████████████████████████████████ | "https://community-packages.deepin.com/deepin/beige/dists/beige/Release" | 35182/35182
  ████████████████████████████████████████ | "https://community-packages.deepin.com/deepin/beige/dists/beige/main/binary-i386/Release" | 113/113
  ████████████████████████████████████████ | "https://community-packages.deepin.com/deepin/beige/dists/beige/main/binary-i386/Packages.gz" | 8779245/8779245
@@ -83,13 +90,22 @@ apt:amd64 (=2.8.0deepin2)
     libtasn1-6:amd64 (=4.18.0-4)
   libseccomp2:amd64 (=2.5.4-2deepin1+rb1)
 ```
+
 ## Format
+
+### Resolve
 
 Default: `{package}:{architecture} ({selector})`
 Field Ref: `{fieldName}`
 
 See [IPackage](./lib/interface.ts#L96) interface.
 
+### Find
+
+Default: `{package}:{index.architecture}: {path}`
+Field Ref: `{fieldName}`
+
+See [IContentItem](./lib/interface.ts#L152) interface.
 
 ## License
 

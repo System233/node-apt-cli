@@ -5,6 +5,7 @@
 
 import { AuthManager } from "./auth.js";
 import {
+  IContentIndex,
   IPackage,
   IPackageRelease,
   IRelease,
@@ -14,11 +15,8 @@ import {
   PackageReleaseKey,
   ReleaseKey,
 } from "./interface.js";
-import {
-  fetchAndCacheMetadata,
-  findItemHash,
-  parsePackageHash,
-} from "./utils.js";
+import { findItemHash, parsePackageHash } from "./parsers.js";
+import { fetchAndCacheMetadata, fetchContents } from "./utils.js";
 
 export class Repository implements IRepository {
   type: "deb" | "deb-src";
@@ -28,6 +26,7 @@ export class Repository implements IRepository {
   architectures?: string[] | undefined;
   metadata: IRelease;
   indexes: IPackage[] = [];
+  contents: IContentIndex[];
   constructor(option: IRepository, readonly auth?: AuthManager) {
     this.type = option.type;
     this.url = option.url;
@@ -35,18 +34,63 @@ export class Repository implements IRepository {
     this.components = option.components;
     this.architectures = option.architectures;
   }
-
-  async loadIndexes(option?: LoadOption) {
+  get avaliavleComponents() {
     const release = this.metadata;
     const components = this.components.filter((item) =>
       release.components.includes(item)
     );
+    return components;
+  }
+  get avaliavleArchitectures() {
+    const release = this.metadata;
     const architectures =
       this.architectures && this.architectures.length
         ? this.architectures.filter((item) =>
             release.architectures.includes(item)
           )
         : release.architectures;
+
+    return architectures;
+  }
+  async loadContents(option?: LoadOption) {
+    if (this.type == "deb-src") {
+      this.contents = [];
+      return;
+    }
+    const release = this.metadata;
+    const components = this.avaliavleComponents;
+    const architectures = this.avaliavleArchitectures;
+
+    const contents = await Promise.all(
+      components.flatMap((component) =>
+        architectures.flatMap(async (architecture) => {
+          const name = `${component}/Contents-${architecture}`;
+          const hash = findItemHash(release.hash, name);
+          const base = `${this.url}/dists/${this.distribution}`;
+
+          const contents = await fetchContents(base, name, hash, {
+            cacheDir: option?.cacheDir,
+            cacheIndex: option?.cacheIndex,
+            quiet: option?.quiet,
+            auth: (url) => this.auth?.find(url) ?? null,
+          });
+          return {
+            repository: this,
+            name,
+            contents,
+            component,
+            architecture,
+          } as IContentIndex;
+        })
+      )
+    );
+    this.contents = contents;
+    return contents;
+  }
+  async loadIndexes(option?: LoadOption) {
+    const release = this.metadata;
+    const components = this.avaliavleComponents;
+    const architectures = this.avaliavleArchitectures;
     const archives =
       this.type == "deb"
         ? architectures.map((item) => `binary-${item}`)
@@ -55,17 +99,14 @@ export class Repository implements IRepository {
       archives.map((archive) => `${component}/${archive}`)
     );
     const downloadMetadata = <T extends string>(item: string) => {
-      const { gzip, hash } = findItemHash(release.hash, item);
-      return fetchAndCacheMetadata<T>(
-        `${this.url}/dists/${this.distribution}/${item}`,
-        {
-          gzip,
-          hash,
-          cacheDir: option?.cacheDir,
-          cacheIndex: option?.cacheIndex,
-          auth: (url) => this.auth?.find(url) ?? null,
-        }
-      );
+      const hash = findItemHash(release.hash, item);
+      const base = `${this.url}/dists/${this.distribution}`;
+      return fetchAndCacheMetadata<T>(base, item, hash, {
+        cacheDir: option?.cacheDir,
+        cacheIndex: option?.cacheIndex,
+        quiet: option?.quiet,
+        auth: (url) => this.auth?.find(url) ?? null,
+      });
     };
     const data = await Promise.all(
       indexes.map(async (item) => {
@@ -108,16 +149,14 @@ export class Repository implements IRepository {
     return this.indexes;
   }
   async loadMetadata(option?: LoadOption) {
+    const base = `${this.url}/dists/${this.distribution}`;
     const release = (
-      await fetchAndCacheMetadata<ReleaseKey>(
-        `${this.url}/dists/${this.distribution}/Release`,
-        {
-          gzip: true,
-          cacheDir: option?.cacheDir,
-          cacheIndex: option?.cacheIndex,
-          auth: (url) => this.auth?.find(url) ?? null,
-        }
-      )
+      await fetchAndCacheMetadata<ReleaseKey>(base, `Release`, null, {
+        cacheDir: option?.cacheDir,
+        cacheIndex: option?.cacheIndex,
+        auth: (url) => this.auth?.find(url) ?? null,
+        quiet: option?.quiet,
+      })
     )[0];
     const hash = Object.entries({
       md5: release.MD5Sum,
@@ -148,8 +187,8 @@ export class Repository implements IRepository {
       label: release.Label,
       version: release.Version,
       date: release.Date,
-      architectures: release.Architectures.split(/\s+/),
-      components: release.Components.split(/\s+/),
+      architectures: release.Architectures?.split(/\s+/) ?? [],
+      components: release.Components?.split(/\s+/) ?? [],
       description: release.Description,
       hash,
     };

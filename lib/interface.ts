@@ -125,10 +125,12 @@ export interface PackageManagerOption {
   architecture?: string;
   cacheDir?: string;
   cacheIndex?: boolean;
+  quiet?: boolean;
 }
 export interface LoadOption {
   cacheDir?: string;
   cacheIndex?: boolean;
+  quiet?: boolean;
 }
 export interface IPackageManager {}
 export interface ResolveOption {
@@ -145,4 +147,19 @@ export interface APTAuthConf {
   url: string;
   username: string;
   password: string;
+}
+
+export interface IContentItem {
+  index: IContentIndex;
+  path: string;
+  type: string;
+  package: string;
+}
+
+export interface IContentIndex {
+  name: string;
+  contents: string;
+  component: string;
+  architecture: string;
+  repository: IRepository;
 }

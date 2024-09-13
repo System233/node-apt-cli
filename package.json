@@ -1,7 +1,7 @@
 {
   "name": "apt-cli",
   "type": "module",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "APT CLI - Used to parse the DEB package dependency tree.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +11,9 @@
   "bin": "./dist/cli.js",
   "devDependencies": {
     "@types/cli-progress": "^3.11.6",
+    "@types/lzma-native": "^4.0.4",
     "@types/node": "^22.5.1",
+    "@types/unbzip2-stream": "^1.4.3",
     "glob": "^11.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4"
@@ -22,13 +24,19 @@
   },
   "dependencies": {
     "cli-progress": "^3.12.0",
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "lzma-native": "^8.0.6",
+    "unbzip2-stream": "^1.4.3"
   },
   "keywords": [
     "apt",
     "cli",
     "apt-cli",
     "debian",
-    "package"
+    "package",
+    "resolver",
+    "finder",
+    "apt-file",
+    "apt serach"
   ]
 }

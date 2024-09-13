@@ -132,12 +132,14 @@ export class PackageManager implements IPackageManager {
     return this._resolve(selector, new Set(), undefined, option);
   }
   find(regex: string, architecture?: string | string[]) {
-    if (!Array.isArray(architecture)) {
-      architecture = architecture ? [architecture] : [];
+    if (architecture && !Array.isArray(architecture)) {
+      architecture = [architecture];
     }
     return this.repository.data.flatMap((item) =>
       item.contents
-        .filter((cont) => architecture.includes(cont.architecture))
+        .filter(
+          (cont) => !architecture || architecture.includes(cont.architecture)
+        )
         .flatMap((item) => serachContents(item, regex))
     );
   }

@@ -26,7 +26,6 @@ export interface CLIOption extends PackageManagerOption {
 }
 const main = async (packages: string[], opt: CLIOption) => {
   Object.assign(opt, program.opts());
-
   opt.architecture = opt.arch;
   if (opt.newline) {
     opt.format = opt.format.split(opt.newline).join("\n");

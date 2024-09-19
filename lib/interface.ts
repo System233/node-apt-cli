@@ -128,11 +128,13 @@ export interface PackageManagerOption {
   cacheDir?: string;
   cacheIndex?: boolean;
   quiet?: boolean;
+  retry?: number;
 }
 export interface LoadOption {
   cacheDir?: string;
   cacheIndex?: boolean;
   quiet?: boolean;
+  retry?: number;
 }
 
 export interface IPackageManager {}

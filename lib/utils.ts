@@ -26,6 +26,7 @@ export interface FetchMetadataOption {
   cacheDir?: string;
   cacheIndex?: boolean;
   quiet?: boolean;
+  retry?: number;
   auth?: (url: string) => { username: string; password: string } | null;
 }
 export const basicAuthorization = (username: string, password: string) =>
@@ -71,9 +72,19 @@ const fetchBlobNetwork = async (
   const parsedURL = new URL(url);
   const headers =
     buildBasicAuthorizationFromURL(parsedURL) || getAuthHeaders(url, option);
-  const resp = await fetch(parsedURL, { headers });
-  if (resp.status >= 400 || resp.body == null) {
-    throw new Error(`fetch ${url}: ${resp.status} ${resp.statusText}`);
+  let resp: Response | null = null;
+  for (let i = 0; i < (option?.retry ?? 10); ++i) {
+    try {
+      resp = await fetch(parsedURL, { headers });
+      if (resp.status >= 400 || resp.body == null) {
+        throw new Error(`fetch ${url}: ${resp.status} ${resp.statusText}`);
+      }
+    } catch (error) {
+      console.error(`fetch ${url}:`, error);
+    }
+  }
+  if (resp == null || resp.body == null) {
+    throw new Error(`fetch fail: ${url}`);
   }
   const cache = option?.cacheDir
     ? await getLocalCache(option.cacheDir, url)

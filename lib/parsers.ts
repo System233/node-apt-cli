@@ -35,7 +35,7 @@ export const serachContents = async (index: IContentIndex, text: string) => {
     matchBegin = "";
   }
   const regex = new RegExp(
-    `^(${matchBegin}(?:${text})${matchEnd})\\t\\s*(.+)\\s*$`
+    `^(${matchBegin}(?:${text})${matchEnd})\\s+(.+)\\s*$`
   );
   const contents = await index.contents();
   if (!contents) {

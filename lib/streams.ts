@@ -12,6 +12,7 @@ import assert from "assert";
 import { createWriteStream } from "fs";
 import { ReadableStream } from "stream/web";
 import { formatUnit, multiBar, truncateFilename } from "./progress.js";
+import { unlink } from "fs/promises";
 
 export const pipelineDuplex = <T extends Duplex>(stream: Readable, dest: T) => {
   stream.pipe(dest);
@@ -54,6 +55,7 @@ export const createProgressStream = (file: string, size: number) => {
     const timer = setInterval(() => bar.updateETA(), 500);
     passThrough.once("close", () => {
       clearInterval(timer);
+      multiBar.update();
       bar.stop();
       multiBar.stop();
     });
@@ -85,6 +87,14 @@ export const createCacheStream = (to: string) => {
   //   stream.on("error", (error) => passThrough.destroy(error));
   //   passThrough.pipe(stream);
   passThrough.pipe(stream);
+  passThrough.once("error", async () => {
+    try {
+      stream.destroy();
+      await unlink(to);
+    } catch (error) {
+      console.error(error);
+    }
+  });
   //   pipeline(passThrough, stream, () => {});
   return passThrough;
 };

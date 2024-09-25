@@ -27,6 +27,8 @@ export interface FetchMetadataOption {
   cacheIndex?: boolean;
   quiet?: boolean;
   retry?: number;
+  headers?: [string, string][];
+  userAgent?: string;
   auth?: (url: string) => { username: string; password: string } | null;
 }
 export const basicAuthorization = (username: string, password: string) =>
@@ -71,23 +73,33 @@ const fetchBlobNetwork = async (
 ): Promise<Readable> => {
   const parsedURL = new URL(url);
   const headers =
-    buildBasicAuthorizationFromURL(parsedURL) || getAuthHeaders(url, option);
+    buildBasicAuthorizationFromURL(parsedURL) ||
+    getAuthHeaders(url, option) ||
+    [];
   let resp: Response | null = null;
+  const userAgent = option?.userAgent ?? "Debian APT-HTTP/1.3";
+  const hasUA = option?.headers?.find(([x]) => x.toLowerCase() == "user-agent");
+  option?.headers?.forEach((item) => headers.push(item));
+  if (!hasUA) {
+    headers.push(["User-Agent", userAgent]);
+  }
   for (let i = 0; i < (option?.retry ?? 10); ++i) {
     try {
-      resp = await fetch(parsedURL, { headers });
+      resp = await fetch(parsedURL, {
+        headers,
+      });
       if (resp.status >= 400 || resp.body == null) {
         throw new Error(
-          `fetch error:${url}: ${resp.status} ${resp.statusText}`
+          `Fetch Error:${url}: ${resp.status} ${resp.statusText}`
         );
       }
       break;
     } catch (error) {
-      console.error(`fetch error:${url}:`, error);
+      console.error(`Fetch Error:${url}:`, error);
     }
   }
   if (resp == null || resp.body == null) {
-    throw new Error(`fetch fail: ${url}`);
+    throw new Error(`Fetch fail: ${url}`);
   }
   const cache = option?.cacheDir
     ? await getLocalCache(option.cacheDir, url)

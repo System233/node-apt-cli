@@ -17,6 +17,7 @@ export interface CLIBaseOption {
   cacheIndex?: boolean;
   quiet?: boolean;
   authConf?: string;
+  userAgent?: string;
 }
 export const createPackageManager = async (opt: CLIBaseOption) => {
   const manager = new PackageManager(opt);

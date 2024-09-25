@@ -18,6 +18,7 @@ export interface CLIFindOption extends PackageManagerOption {
   cacheIndex: boolean;
   authConf?: string;
   quiet?: boolean;
+  userAgent?: string;
 }
 export const find = async (regex: string[], opt: CLIFindOption) => {
   Object.assign(opt, program.opts());

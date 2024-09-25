@@ -17,6 +17,7 @@ export interface CLIOption extends PackageManagerOption {
   format: string;
   indent: number;
   newline?: string;
+  userAgent?: string;
   noMissing: boolean;
   missing: boolean;
   unique: boolean;

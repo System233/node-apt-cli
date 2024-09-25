@@ -15,6 +15,7 @@ program
   .option("--newline <LF>", "format line break markers.")
   .option("--cache-index", "cache package indexes.")
   .option("--quiet", "no progress bar.")
+  .option("--user-agent", "set User-Agent header")
   .option("--retry <INT>", "fetch retry times.", parseInt, 10)
 
   .option(

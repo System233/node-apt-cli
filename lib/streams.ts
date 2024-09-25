@@ -36,7 +36,7 @@ export const createHashStream = (file: string, type: string, hash: string) => {
   passThrough.on("end", () => {
     try {
       const hex = h.digest("hex");
-      assert.equal(hex, hash, `Corrupted: type=${type} file=${file}`);
+      assert.equal(hex, hash, `Stream Corrupted: type=${type} file=${file}`);
     } catch (error) {
       passThrough.destroy(error as Error);
     }
@@ -93,10 +93,10 @@ export const createCacheStream = (to: string, total: number) => {
       console.error("createCacheStream:" + error, { cause: error });
     }
   };
-  stream.once("end", check);
+  const passThrough = new PassThrough({ autoDestroy: true });
+  stream.once("finish", check);
   stream.once("error", check);
-  const passThrough = new PassThrough();
-  passThrough.pipe(stream);
+  passThrough.pipe(stream, { end: true });
   return passThrough;
 };
 

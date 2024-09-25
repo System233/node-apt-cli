@@ -77,10 +77,13 @@ const fetchBlobNetwork = async (
     try {
       resp = await fetch(parsedURL, { headers });
       if (resp.status >= 400 || resp.body == null) {
-        throw new Error(`fetch ${url}: ${resp.status} ${resp.statusText}`);
+        throw new Error(
+          `fetch error:${url}: ${resp.status} ${resp.statusText}`
+        );
       }
+      break;
     } catch (error) {
-      console.error(`fetch ${url}:`, error);
+      console.error(`fetch error:${url}:`, error);
     }
   }
   if (resp == null || resp.body == null) {
@@ -92,7 +95,7 @@ const fetchBlobNetwork = async (
   const total = +(resp.headers.get("content-length") ?? 0);
   let stream = toReadableStream(resp.body);
   if (cache) {
-    stream = pipelineDuplex(stream, createCacheStream(cache));
+    stream = pipelineDuplex(stream, createCacheStream(cache, total));
     // stream = stream.pipe(createCacheStream(cache));
   }
   if (!option?.quiet) {

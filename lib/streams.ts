@@ -7,12 +7,12 @@ import { createUnzip } from "zlib";
 import bz2 from "unbzip2-stream";
 import xz from "lzma-native";
 import { createHash } from "crypto";
-import { Duplex, PassThrough, pipeline, Readable, Stream } from "stream";
+import { Duplex, PassThrough, Readable, Stream } from "stream";
 import assert from "assert";
 import { createWriteStream } from "fs";
 import { ReadableStream } from "stream/web";
 import { formatUnit, multiBar, truncateFilename } from "./progress.js";
-import { unlink } from "fs/promises";
+import { rename, unlink } from "fs/promises";
 
 export const pipelineDuplex = <T extends Duplex>(stream: Readable, dest: T) => {
   stream.pipe(dest);
@@ -23,10 +23,10 @@ export const pipelineDuplex = <T extends Duplex>(stream: Readable, dest: T) => {
 export const createGzipStream = () => {
   return createUnzip();
 };
-export const createBzip2Stream = () => {
+export const createBzip2Stream = (): Duplex => {
   return bz2();
 };
-export const createXZStream = () => {
+export const createXZStream = (): Duplex => {
   return xz.createDecompressor();
 };
 export const createHashStream = (file: string, type: string, hash: string) => {
@@ -79,23 +79,24 @@ export const streamToBuffer = (stream: Stream) => {
     stream.pipe(passThrough);
   });
 };
-export const createCacheStream = (to: string) => {
-  const stream = createWriteStream(to, { encoding: "binary" });
-  const passThrough = new PassThrough();
-  //   passThrough.on("data", (chunk: Buffer) => stream.write(chunk));
-  //   passThrough.on("end", () => stream.end());
-  //   stream.on("error", (error) => passThrough.destroy(error));
-  //   passThrough.pipe(stream);
-  passThrough.pipe(stream);
-  passThrough.once("error", async () => {
+export const createCacheStream = (to: string, total: number) => {
+  const tmp = to + ".tmp";
+  const stream = createWriteStream(tmp, { encoding: "binary" });
+  const check = async (error?: Error) => {
     try {
-      stream.destroy();
-      await unlink(to);
+      if (error || stream.bytesWritten != total) {
+        await unlink(to);
+      } else {
+        await rename(tmp, to);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("createCacheStream:" + error, { cause: error });
     }
-  });
-  //   pipeline(passThrough, stream, () => {});
+  };
+  stream.once("end", check);
+  stream.once("error", check);
+  const passThrough = new PassThrough();
+  passThrough.pipe(stream);
   return passThrough;
 };
 
